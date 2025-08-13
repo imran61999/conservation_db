@@ -26,13 +26,13 @@ INSERT INTO species (common_name, scientific_name, discovery_date, conservation_
 
 CREATE TABLE sightings (
     sighting_id SERIAL PRIMARY KEY,
-    species_id INT,
-    ranger_id INT,
+    species_id INT REFERENCES species(species_id),
+    ranger_id INT REFERENCES rangers(ranger_id),
     location VARCHAR(100),
     sighting_time TIMESTAMP,
     notes TEXT,
-    FOREIGN KEY (species_id) REFERENCES species(species_id),
-    FOREIGN KEY (ranger_id) REFERENCES rangers(ranger_id)
+    -- FOREIGN KEY (species_id) REFERENCES species(species_id),
+    -- FOREIGN KEY (ranger_id) REFERENCES rangers(ranger_id)
 );
 
 INSERT INTO sightings ( species_id, ranger_id, location, sighting_time, notes) VALUES
@@ -41,9 +41,6 @@ INSERT INTO sightings ( species_id, ranger_id, location, sighting_time, notes) V
 (3, 3, 'Bamboo Grove East', '2024-05-15 09:10:00', 'Feeding observed'),
 (1, 2, 'Snowfall Pass', '2024-05-18 18:30:00', NULL);
 
-SELECT * FROM sightings;
-SELECT * FROM species;
-SELECT * FROM rangers;
 
 
 -- 1 Register a new ranger with provided data with name = 'Derek Fox' and region = 'Coastal Plains'
@@ -57,3 +54,33 @@ SELECT count(DISTINCT species_id)  FROM sightings
 -- 3 Find all sightings where the location includes "Pass".
 SELECT * FROM sightings 
 WHERE location NOT LIKE '%Pass%';
+
+
+-- 4 List each ranger's name and their total number of sightings.
+SELECT name, count(ranger_id)  FROM rangers
+JOIN sightings USING(ranger_id)
+GROUP BY name
+;
+SELECT * FROM species;
+
+SELECT common_name, species_id FROM species
+LEFT JOIN sightings USING(species_id)
+;
+SELECT common_name, species_id FROM species
+RIGHT JOIN sightings USING(species_id)
+;
+
+-- 6 Show the most recent 2 sightings.
+SELECT common_name, sighting_time, name  FROM sightings
+JOIN rangers USING(ranger_id )
+JOIN species USING(species_id)
+ORDER BY sighting_time DESC
+LIMIT 2
+;
+
+-- 7 Update all species discovered before year 1800 to have status 'Historic'.
+UPDATE species
+SET conservation_status = 'historic'
+WHERE extract(YEAR FROM discovery_date) < 1800
+ ;
+
